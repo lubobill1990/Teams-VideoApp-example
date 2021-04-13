@@ -1,0 +1,16 @@
+{
+  "name": "teams-videoapp-example",
+  "productName": "Teams VideoApp example",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "app": "node server.js ./app 8000",
+    "container": "node server.js ./container 9000"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Bo Lu",
+    "email": "bolu1@microsoft.com"
+  },
+  "license": "MIT"
+}

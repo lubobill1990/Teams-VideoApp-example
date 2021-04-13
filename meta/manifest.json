@@ -1,0 +1,59 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.9",
+  "version": "1.0.0",
+  "showLoadingIndicator": true,
+  "id": "b15f97b7-1f9b-4bb7-ac9f-efddf27aae7b",
+  "packageName": "com.microsoft.teams.videopp",
+  "developer": {
+    "name": "Bo Lu",
+    "websiteUrl": "https://github.com/lubobill1990/Teams-VideoApp-example",
+    "privacyUrl": "https://github.com/lubobill1990/Teams-VideoApp-example",
+    "termsOfUseUrl": "https://github.com/lubobill1990/Teams-VideoApp-example"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Teams VideoApp example",
+    "full": "Teams VideoApp example"
+  },
+  "description": {
+    "short": "This repo demonstrate a minimal Teams video app.",
+    "full": "Clone this repo and change the video frame processing function"
+  },
+  "accentColor": "#FFFFFF",
+  "staticTabs": [
+    {
+      "entityId": "videoAppMain",
+      "name": "Video app main",
+      "contentUrl": "https://localhost:8000/index.html",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "about",
+      "scopes": ["personal"]
+    }
+  ],
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://localhost:8000/index.html",
+      "canUpdateConfiguration": true,
+      "scopes": [
+        "team",
+        "groupchat"
+      ],
+      "context":[
+        "channelTab",
+        "privateChatTab",
+        "meetingChatTab",
+        "meetingDetailsTab",
+        "meetingSidePanel",
+        "meetingStage"
+     ]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["localhost:8000"]
+}

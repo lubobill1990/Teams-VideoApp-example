@@ -1,0 +1,16 @@
+#page_wrap {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+#client_wrap {
+  flex: 1;
+  margin-right: 2rem;
+}
+#video_app_wrap {
+}
+#ifrm {
+  height: 76vh;
+  width: 320px;
+}
