@@ -1,3 +1,3 @@
 [submodule "sdk"]
 	path = sdk
-	url = git@github.com:zhml530/microsoft-teams-library-js.git
+	url = https://github.com/zhml530/microsoft-teams-library-js.git
