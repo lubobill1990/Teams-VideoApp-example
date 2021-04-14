@@ -12,8 +12,8 @@
     "termsOfUseUrl": "https://github.com/lubobill1990/Teams-VideoApp-example"
   },
   "icons": {
-    "color": "color.png",
-    "outline": "outline.png"
+    "color": "icon-color.png",
+    "outline": "icon-outline.png"
   },
   "name": {
     "short": "Teams VideoApp example",
@@ -24,36 +24,26 @@
     "full": "Clone this repo and change the video frame processing function"
   },
   "accentColor": "#FFFFFF",
-  "staticTabs": [
-    {
-      "entityId": "videoAppMain",
-      "name": "Video app main",
-      "contentUrl": "https://localhost:8000/index.html",
-      "scopes": ["personal"]
-    },
-    {
-      "entityId": "about",
-      "scopes": ["personal"]
-    }
-  ],
   "configurableTabs": [
     {
-      "configurationUrl": "https://localhost:8000/index.html",
+      "configurationUrl": "https://lubobill1990.github.io/Teams-VideoApp-example/app/configure.html",
       "canUpdateConfiguration": true,
       "scopes": [
-        "team",
         "groupchat"
       ],
-      "context":[
-        "channelTab",
+      "context": [
         "privateChatTab",
-        "meetingChatTab",
-        "meetingDetailsTab",
         "meetingSidePanel",
-        "meetingStage"
-     ]
+        "meetingDetailsTab",
+        "meetingChatTab"
+      ]
     }
   ],
-  "permissions": ["identity", "messageTeamMembers"],
-  "validDomains": ["localhost:8000"]
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "lubobill1990.github.io"
+  ]
 }
