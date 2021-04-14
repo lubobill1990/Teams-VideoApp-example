@@ -68,3 +68,4 @@ document.getElementById("pixel_value").addEventListener("change", function () {
   uiSelectedEffect.pixelValue = this.value;
   microsoftTeams.videoApp.notifySelectedVideoEffectChanged("EffectChanged");
 });
+microsoftTeams.appInitialization.notifySuccess();
