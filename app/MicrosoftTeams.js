@@ -3408,9 +3408,13 @@ var videoApp;
          */
         EffectChangeType[EffectChangeType["EffectChanged"] = 0] = "EffectChanged";
         /**
+         * enable the video effect
+         */
+        EffectChangeType[EffectChangeType["EffectEnabled"] = 1] = "EffectEnabled";
+        /**
          * disable the video effect
          */
-        EffectChangeType[EffectChangeType["EffectDisabled"] = 1] = "EffectDisabled";
+        EffectChangeType[EffectChangeType["EffectDisabled"] = 2] = "EffectDisabled";
     })(EffectChangeType = videoApp_1.EffectChangeType || (videoApp_1.EffectChangeType = {}));
     /**
      * VideoApp
@@ -3442,7 +3446,7 @@ var videoApp;
         VideoApp.prototype.registerForVideoEffect = function (callback) {
             internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.task);
             this.videoEffectCallback = callback;
-            communication_1.sendMessageToParent('videoApp.registerVideoEffect');
+            communication_1.sendMessageToParent('videoApp.registerForVideoEffect');
         };
         /**
          * Message handler
@@ -3450,11 +3454,11 @@ var videoApp;
         VideoApp.prototype.receiveMessage = function (event) {
             internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.task);
             var type = event.data.type;
-            if (type === 'NewVideoFrame' && this.videoFrameCallback != null) {
+            if (type === 'videoApp.newVideoFrame' && this.videoFrameCallback != null) {
                 var videoFrame = event.data.videoFrame;
                 this.videoFrameCallback(videoFrame, this.notifyVideoFrameProcessed.bind(this), this.notifyError.bind(this));
             }
-            else if (type === 'EffectParameterChange' && this.videoEffectCallback != null) {
+            else if (type === 'videoApp.effectParameterChange' && this.videoEffectCallback != null) {
                 this.videoEffectCallback('');
             }
             else {
@@ -3474,7 +3478,7 @@ var videoApp;
          */
         VideoApp.prototype.notifyVideoFrameProcessed = function () {
             internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.task);
-            communication_1.sendMessageToParent('videoApp.VideoFrameProcessed');
+            communication_1.sendMessageToParent('videoApp.videoFrameProcessed');
         };
         /**
          * sending error notification to Teams client.
