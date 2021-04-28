@@ -1,4 +1,4 @@
-microsoftTeams.initialize();
+microsoftTeams.initialize(() => {}, ["https://localhost:9000"]);
 
 // This is the effect for processing
 let appliedEffect = {
@@ -11,9 +11,9 @@ let uiSelectedEffect = {};
 
 let errorOccurs = false;
 //Sample video effect
-function videoEffect(videoFrame, notifyVideoProcessed, notifyError) {
+function videoFrameHandler(videoFrame, notifyVideoProcessed, notifyError) {
   const maxLen =
-    (videoFrame.height * videoFrame.width * 4) /
+    (videoFrame.height * videoFrame.width) /
     Math.max(1, appliedEffect.proportion);
 
   for (let i = 0; i < maxLen; i += 4) {
@@ -48,9 +48,11 @@ function effectParameterChanged(effectName) {
     } catch (e) {}
   }
 }
-console.log(microsoftTeams)
+
 microsoftTeams.videoApp.registerForVideoEffect(effectParameterChanged);
-microsoftTeams.videoApp.registerForVideoFrame(videoEffect);
+microsoftTeams.videoApp.registerForVideoFrame(videoFrameHandler, {
+  format: "NV12",
+});
 
 // any changes to the UI should notify Teams client.
 document.getElementById("enable_check").addEventListener("change", function () {

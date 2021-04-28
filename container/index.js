@@ -5,63 +5,6 @@ function writeText(canvas, str) {
   ctx.fillText(str, 10, 40);
 }
 
-class Counter {
-  constructor(ringLen = 1000) {
-    this.countPrevSecond = 0;
-    this.countThisSecond = 0;
-    this.currentSecond = 0;
-    this.startTime = 0;
-    this.statRingLen = ringLen;
-    this.statRing = new Array(this.statRingLen).fill(-1);
-    this.currentRingIdx = 0;
-    this.tickDuration = 0;
-  }
-  getCurrentSecond() {
-    return Math.floor(Date.now() / 1000);
-  }
-  start() {
-    this.startTime = Date.now();
-    return this.startTime;
-  }
-  end() {
-    const now = Date.now();
-    this.tickDuration += now - this.startTime;
-    return now;
-  }
-
-  tick() {
-    this.statRing[this.currentRingIdx] = this.tickDuration;
-    this.tickDuration = 0;
-
-    this.currentRingIdx = (this.currentRingIdx + 1) % this.statRingLen;
-    let latestSecond = this.getCurrentSecond();
-    if (latestSecond != this.currentSecond) {
-      this.countPrevSecond = this.countThisSecond;
-      this.currentSecond = latestSecond;
-      this.countThisSecond = 1;
-    } else {
-      this.countThisSecond++;
-    }
-
-    return this.countPrevSecond;
-  }
-  getTickPerSecond() {
-    let sum = 0;
-    let count = 0;
-
-    for (let i = 0; i < this.statRingLen; ++i) {
-      if (this.statRing[i] == -1) {
-        break;
-      }
-      sum += this.statRing[i];
-      count++;
-    }
-    if (sum == 0) {
-      return -1;
-    }
-    return parseInt(count / (sum / 1000));
-  }
-}
 
 const rawVideoElem = document.createElement("video");
 rawVideoElem.setAttribute("id", "rawVideo");
@@ -154,49 +97,28 @@ async function startStreaming() {
 }
 const iframeWindow = document.getElementById("ifrm").contentWindow;
 
-const counter = new Counter();
-const counterOther = new Counter();
-
-setInterval(() => {
-  document.getElementById("fps").value = counter.getTickPerSecond();
-}, 1000);
-
-setInterval(() => {
-  document.getElementById("fps2").value = counterOther.getTickPerSecond();
-}, 1000);
-
 let sharedBuffer;
+let sharedImageArray;
 let sendToIframe = true;
 async function sendNewVideoFrame() {
   await startStreaming();
-  counterOther.start();
+  startProfile("GetVideoFrame");
   const imageData = getVideoFrame();
-  counterOther.end();
-  counter.start();
+  endProfile("GetVideoFrame");
   if (
     !sharedBuffer ||
     sharedBuffer.byteLength !== imageData.data.buffer.byteLength
   ) {
+    delete sharedBuffer;
     sharedBuffer = new SharedArrayBuffer(imageData.data.buffer.byteLength);
+    sharedImageArray = new Uint8ClampedArray(sharedBuffer);
   }
-  let sabArray = new Uint8ClampedArray(sharedBuffer);
-  sabArray.set(imageData.data, 0);
-  counter.end();
 
-  let features = {};
+  startProfile("HandleFrame");
+  startProfile("CopyToShareArray");
+  sharedImageArray.set(imageData.data, 0);
 
-  for (let idx in config.features) {
-    const feature = config.features[idx];
-    if (feature === "facialFeature") {
-      features["facialFeature"] = [
-        [1, 2],
-        [100, 244],
-      ];
-    } else if (feature === "personalMask") {
-      features["personalMask"] = [1, 2, 3, 4, 5];
-    }
-  }
-  counter.start();
+  endProfile("CopyToShareArray");
 
   if (!sendToIframe) {
     setTimeout(() => {
@@ -204,85 +126,92 @@ async function sendNewVideoFrame() {
     }, 0);
     return;
   }
+  startProfile("PostNewVideoFrame");
 
-  iframeWindow.postMessage({
-    type: "NewVideoFrame",
-    videoFrame: {
-      width: imageData.width,
-      height: imageData.height,
-      data: sharedBuffer,
+  iframeWindow.postMessage(
+    {
+      type: "videoApp.newVideoFrame",
+      videoFrame: {
+        width: imageData.width,
+        height: imageData.height,
+        data: sharedImageArray,
+      },
     },
-    features,
-  });
+    "*"
+  );
 }
 
 function sendEffectParameters(parameters) {
-  iframeWindow.postMessage({
-    type: "EffectParameterChange",
-    effectName: parameters,
-  });
+  iframeWindow.postMessage(
+    {
+      type: "videoApp.effectParameterChange",
+      effectId: parameters,
+    },
+    "*"
+  );
 }
-
 function videoFrameProcessed() {
-  counter.end();
-  counterOther.start();
-  const height = rawVideoElem.videoHeight;
-  const width = rawVideoElem.videoWidth;
-  const imageArrayBuffer = sharedBuffer;
+  endProfile("PostNewVideoFrame");
+
   if (renderCheck) {
-    const imageDataArray = new Uint8ClampedArray(
-      imageArrayBuffer,
-      0,
-      height * width * 4
-    );
     if (!processedArrayBuffer) {
-      processedArrayBuffer = new ArrayBuffer(imageArrayBuffer.byteLength);
+      processedArrayBuffer = new ArrayBuffer(sharedBuffer.byteLength);
       processedImageArr = new Uint8ClampedArray(processedArrayBuffer);
     }
-    processedImageArr.set(imageDataArray, 0);
-    let imageData = new ImageData(processedImageArr, width, height);
+    startProfile("CopyProcessedFrame");
+    processedImageArr.set(sharedImageArray, 0);
+    endProfile("CopyProcessedFrame");
+    endProfile("HandleFrame");
+
+    startProfile("DisplayProcessedFrame");
+    let imageData = new ImageData(processedImageArr, rawVideoElem.videoWidth, rawVideoElem.videoHeight);
     previewCanvasCtx.putImageData(imageData, 0, 0);
     writeText(previewCanvas, "After process");
+    endProfile("DisplayProcessedFrame");
   }
-  counterOther.end();
-
-  counter.tick();
-  counterOther.tick();
 
   sendNewVideoFrame();
 }
 
-let config = {
-  features: [],
-};
+let config = {};
 let processedArrayBuffer;
 let processedImageArr;
 let renderCheck = true;
 let sendToIframeToBeApplied = true;
 
 function receiveMessage(event) {
-  const type = event.data.type;
-  if (type === "SubscribeVideoFrames") {
+  if (event.data.func === "initialize") {
+    iframeWindow.postMessage(
+      {
+        id: event.data.id,
+        args: ["sidePanel", "web"],
+      },
+      "*"
+    );
+    return;
+  }
+  const type = event.data.func;
+  if (type === "videoApp.sendMessagePortToMainWindow") {
     config = event.data.config;
     sendNewVideoFrame();
-  } else if (type === "VideoFrameProcessed") {
+  } else if (type === "videoApp.videoFrameProcessed") {
     videoFrameProcessed();
     return;
-  } else if (type === "VideoProcessError") {
-    const errMsg = event.data.message;
+  } else if (type === "videoApp.notifyError") {
+    const errMsg = event.data.args;
     console.log(errMsg);
     alert(errMsg);
-  } else if (type === "VideoEffectChanged") {
+  } else if (type === "videoApp.videoEffectChanged") {
     console.log("effect changed from video app");
-
-    if (event.data.effectChangeType === "EffectDisabled") {
+    const effectChangeType = event.data.args[0];
+    if (effectChangeType === "EffectDisabled") {
       // stop post message
       if (selectedScenario === "pre_meeting") {
         sendToIframe = false;
       } else if (selectedScenario === "in_meeting") {
         sendToIframeToBeApplied = false;
       }
-    } else if (event.data.effectChangeType === "EffectChanged") {
+    } else if (effectChangeType === "EffectChanged") {
       if (selectedScenario === "pre_meeting") {
         sendToIframe = true;
         sendEffectParameters(undefined);
@@ -291,7 +220,6 @@ function receiveMessage(event) {
       }
     }
   }
-  console.log(event);
 }
 window.addEventListener("message", receiveMessage, false);
 

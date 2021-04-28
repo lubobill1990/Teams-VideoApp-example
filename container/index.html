@@ -148,11 +148,11 @@
           </div>
         </fieldset>
 
-        <fieldset id="videoWrapper">
-          <legend>Original video</legend>
-        </fieldset>
         <fieldset id="resultWrapper">
           <legend>Processed video</legend>
+        </fieldset>
+        <fieldset id="videoWrapper">
+          <legend>Original video</legend>
         </fieldset>
       </div>
       <div id="video_app_wrap">
@@ -162,13 +162,14 @@
           <legend>Iframe of video app</legend>
           <iframe
             id="ifrm"
-            src="http://localhost:8000/index.html"
+            src="https://localhost:8000/index.html"
             frameborder="1"
           ></iframe>
         </fieldset>
       </div>
     </div>
 
-    <script src="/index.js"></script>
+    <script src="./measure.js"></script>
+    <script src="./index.js"></script>
   </body>
 </html>

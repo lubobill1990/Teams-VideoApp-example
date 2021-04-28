@@ -8,9 +8,11 @@
   flex: 1;
   margin-right: 2rem;
 }
-#video_app_wrap {
-}
 #ifrm {
   height: 76vh;
   width: 320px;
+}
+canvas, video {
+  max-width: 800px;
+  max-height: 500px;
 }
