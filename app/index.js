@@ -1,4 +1,4 @@
-microsoftTeams.initialize(() => {}, ["https://localhost:9000"]);
+microsoftTeams.initialize(() => {}, ["https://localhost:9000", "https://lubobill1990.github.io"]);
 
 // This is the effect for processing
 let appliedEffect = {

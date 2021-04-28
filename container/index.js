@@ -122,6 +122,7 @@ async function sendNewVideoFrame() {
 
   if (!sendToIframe) {
     setTimeout(() => {
+      startProfile("PostNewVideoFrame");
       videoFrameProcessed();
     }, 0);
     return;
@@ -168,6 +169,8 @@ function videoFrameProcessed() {
     previewCanvasCtx.putImageData(imageData, 0, 0);
     writeText(previewCanvas, "After process");
     endProfile("DisplayProcessedFrame");
+  } else {
+    endProfile("HandleFrame");
   }
 
   sendNewVideoFrame();
