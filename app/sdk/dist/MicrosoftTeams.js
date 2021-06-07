@@ -655,7 +655,7 @@ function handleBeforeUnload() {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = __webpack_require__(5);
-exports.version = '1.9.0';
+exports.version = '1.10.0';
 /**
  * This is the SDK version when all SDK APIs started to check platform compatibility for the APIs.
  */
@@ -717,7 +717,6 @@ exports.validOrigins = [
     'https://powerpoint.office.com',
     'https://www.officeppe.com',
     'https://*.www.office.com',
-    'http://127.0.0.1:5000',
 ];
 exports.validOriginRegExp = utils_1.generateRegExpFromUrls(exports.validOrigins);
 /**
@@ -1389,7 +1388,7 @@ var settings;
      * @param callback The callback to invoke when the {@link Settings} object is retrieved.
      */
     function getSettings(callback) {
-        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.settings, constants_1.FrameContexts.remove);
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.settings, constants_1.FrameContexts.remove, constants_1.FrameContexts.sidePanel);
         communication_1.sendMessageToParent('settings.getSettings', callback);
     }
     settings.getSettings = getSettings;
@@ -1399,7 +1398,7 @@ var settings;
      * @param settings The desired settings for this instance.
      */
     function setSettings(instanceSettings, onComplete) {
-        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.settings);
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.settings, constants_1.FrameContexts.sidePanel);
         communication_1.sendMessageToParent('settings.setSettings', [instanceSettings], onComplete ? onComplete : utils_1.getGenericOnCompleteHandler());
     }
     settings.setSettings = setSettings;
@@ -3320,9 +3319,8 @@ var meeting;
      * Allows an app to request the live streaming be started at the given streaming url
      * @param streamUrl the url to the stream resource
      * @param streamKey the key to the stream resource
-     * @param callback Callback contains 2 parameters: error and liveStreamState.
-     * error can either contain an error of type SdkError, in case of an error, or null when operation is successful
-     * liveStreamState can either contain a LiveStreamState value, or null when operation fails
+     * @param callback Callback contains error parameter which can be of type SdkError in case of an error, or null when operation is successful
+     * Use getLiveStreamState or registerLiveStreamChangedHandler to get updates on the live stream state
      */
     function requestStartLiveStreaming(callback, streamUrl, streamKey) {
         if (!callback) {
@@ -3334,9 +3332,8 @@ var meeting;
     meeting.requestStartLiveStreaming = requestStartLiveStreaming;
     /**
      * Allows an app to request the live streaming be stopped at the given streaming url
-     * @param callback Callback contains 2 parameters: error and liveStreamState.
-     * error can either contain an error of type SdkError, in case of an error, or null when operation is successful
-     * liveStreamState can either contain a LiveStreamState value, or null when operation fails
+     * @param callback Callback contains error parameter which can be of type SdkError in case of an error, or null when operation is successful
+     * Use getLiveStreamState or registerLiveStreamChangedHandler to get updates on the live stream state
      */
     function requestStopLiveStreaming(callback) {
         if (!callback) {
@@ -3414,6 +3411,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var communication_1 = __webpack_require__(0);
 var internalAPIs_1 = __webpack_require__(1);
 var constants_1 = __webpack_require__(2);
+var handlers_1 = __webpack_require__(3);
 /**
  * Namespace to video extensibility of the SDK.
  *
@@ -3421,12 +3419,11 @@ var constants_1 = __webpack_require__(2);
 var videoApp;
 (function (videoApp_1) {
     /**
-     * Video frame format enum
+     * Video frame format enum, currentlyl only support NV12
      */
     var VideoFrameFormat;
     (function (VideoFrameFormat) {
-        VideoFrameFormat[VideoFrameFormat["RGB"] = 0] = "RGB";
-        VideoFrameFormat[VideoFrameFormat["NV12"] = 1] = "NV12";
+        VideoFrameFormat[VideoFrameFormat["NV12"] = 0] = "NV12";
     })(VideoFrameFormat = videoApp_1.VideoFrameFormat || (videoApp_1.VideoFrameFormat = {}));
     /**
      *  Video effect change type enum
@@ -3452,10 +3449,20 @@ var videoApp;
          * register to read the video frames in Permissions section.
          */
         VideoApp.prototype.registerForVideoFrame = function (frameCallback, config) {
-            internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage);
+            var _this = this;
+            internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel);
             this.videoFrameCallback = frameCallback;
-            this.setupConnection();
-            communication_1.sendMessageToParent('videoApp.sendMessagePortToMainWindow', [config]);
+            handlers_1.registerHandler('videoApp.newVideoFrame', function (videoFrame) {
+                if (_this.videoFrameCallback !== null && videoFrame !== undefined) {
+                    _this.videoFrameCallback(videoFrame, _this.notifyVideoFrameProcessed.bind(_this), _this.notifyError.bind(_this));
+                }
+            });
+            handlers_1.registerHandler('videoApp.effectParameterChange', function (effectId) {
+                if (_this.videoEffectCallback !== undefined) {
+                    _this.videoEffectCallback(effectId);
+                }
+            });
+            communication_1.sendMessageToParent('videoApp.registerForVideoFrame', [config]);
         };
         /**
          * VideoApp extension should call this to notify Teams Client current selected effect parameter changed.
@@ -3463,38 +3470,14 @@ var videoApp;
          * in-meeting scenario, we will call videoEffectCallback when apply button clicked.
          */
         VideoApp.prototype.notifySelectedVideoEffectChanged = function (effectChangeType) {
-            internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage);
+            internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel);
             communication_1.sendMessageToParent('videoApp.videoEffectChanged', [effectChangeType]);
         };
         /**
          * Register the video effect callback, Teams client uses this to notify the videoApp extension the new video effect will by applied.
          */
         VideoApp.prototype.registerForVideoEffect = function (callback) {
-            internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage);
             this.videoEffectCallback = callback;
-            communication_1.sendMessageToParent('videoApp.registerForVideoEffect');
-        };
-        /**
-         * Message handler
-         */
-        VideoApp.prototype.receiveMessage = function (event) {
-            var type = event.data.type;
-            if (type === 'videoApp.newVideoFrame' && this.videoFrameCallback != null) {
-                var videoFrame = event.data.videoFrame;
-                this.videoFrameCallback(videoFrame, this.notifyVideoFrameProcessed.bind(this), this.notifyError.bind(this));
-            }
-            else if (type === 'videoApp.effectParameterChange' && this.videoEffectCallback != null) {
-                this.videoEffectCallback(event.data.effectId);
-            }
-            else {
-                console.log('Unsupported message type' + type);
-            }
-        };
-        /**
-         * Setup the connection between videoApp and Teams, they use postMessage function to communicate
-         */
-        VideoApp.prototype.setupConnection = function () {
-            window.addEventListener('message', this.receiveMessage.bind(this), false);
         };
         /**
          * sending notification to Teams client finished the video frame processing, now Teams client can render this video frame
@@ -3842,6 +3825,7 @@ var remoteCamera;
         SessionTerminatedReason[SessionTerminatedReason["DataChannelError"] = 7] = "DataChannelError";
         SessionTerminatedReason[SessionTerminatedReason["ControllerCancelled"] = 8] = "ControllerCancelled";
         SessionTerminatedReason[SessionTerminatedReason["ControlDisabled"] = 9] = "ControlDisabled";
+        SessionTerminatedReason[SessionTerminatedReason["ControlTerminatedToAllowOtherController"] = 10] = "ControlTerminatedToAllowOtherController";
     })(SessionTerminatedReason = remoteCamera.SessionTerminatedReason || (remoteCamera.SessionTerminatedReason = {}));
     /**
      * @private
