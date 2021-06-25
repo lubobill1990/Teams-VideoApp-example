@@ -49,25 +49,25 @@ function effectParameterChanged(effectName) {
   }
 }
 
-microsoftTeams.videoApp.registerForVideoEffect(effectParameterChanged);
-microsoftTeams.videoApp.registerForVideoFrame(videoFrameHandler, {
+microsoftTeams.video.registerForVideoEffect(effectParameterChanged);
+microsoftTeams.video.registerForVideoFrame(videoFrameHandler, {
   format: "NV12",
 });
 
 // any changes to the UI should notify Teams client.
 document.getElementById("enable_check").addEventListener("change", function () {
   if (this.checked) {
-    microsoftTeams.videoApp.notifySelectedVideoEffectChanged("EffectChanged");
+    microsoftTeams.video.notifySelectedVideoEffectChanged("EffectChanged");
   } else {
-    microsoftTeams.videoApp.notifySelectedVideoEffectChanged("EffectDisabled");
+    microsoftTeams.video.notifySelectedVideoEffectChanged("EffectDisabled");
   }
 });
 document.getElementById("proportion").addEventListener("change", function () {
   uiSelectedEffect.proportion = this.value;
-  microsoftTeams.videoApp.notifySelectedVideoEffectChanged("EffectChanged");
+  microsoftTeams.video.notifySelectedVideoEffectChanged("EffectChanged");
 });
 document.getElementById("pixel_value").addEventListener("change", function () {
   uiSelectedEffect.pixelValue = this.value;
-  microsoftTeams.videoApp.notifySelectedVideoEffectChanged("EffectChanged");
+  microsoftTeams.video.notifySelectedVideoEffectChanged("EffectChanged");
 });
 microsoftTeams.appInitialization.notifySuccess();
