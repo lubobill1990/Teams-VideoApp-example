@@ -99,7 +99,7 @@ class WorkerPool {
     return myWorker;
   }
   addToWorker(videoFrame) {
-    myWorker = findAvailableWorker();
+    myWorker = this.findAvailableWorker();
     myWorker.worker.postMessage({ videoFrame, appliedEffect });
     myWorker.worker.onmessage = function (e) {
       myWorker.done = true;
