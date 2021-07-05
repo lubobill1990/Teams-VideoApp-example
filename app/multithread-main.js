@@ -118,7 +118,7 @@ async function videoFrameHandler(
   notifyError
 ) {
   const frameData = framePool.allocate(videoFrame.data.byteLength);
-  const clonedVideoFrame = clone(videoFrame);
+  const clonedVideoFrame = { ...videoFrame };
   clonedVideoFrame.data = frameData;
   workerPool.addToWorker(clonedVideoFrame);
   const processedFrame = getProsessedFrame(videoFrame.data.byteLength);
