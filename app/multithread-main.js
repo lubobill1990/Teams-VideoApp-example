@@ -250,9 +250,9 @@ async function videoFrameHandler(
         console.log('no idle worker')
     }
   }
-  console.log('-------------------------------')
-  framePool.print();
-  workerPool.print();
+  // console.log('-------------------------------')
+  // framePool.print();
+  // workerPool.print();
 
   const processedFrame = framePool.getProsessedFrame(
     videoFrame.data.byteLength
