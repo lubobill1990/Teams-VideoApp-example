@@ -1,9 +1,7 @@
-microsoftTeams.initialize(() => {}, ["https://localhost:9000", "https://lubobill1990.github.io"]);
-
 // This is the effect for processing
 let appliedEffect = {
   pixelValue: 100,
-  proportion: 2,
+  proportion: 3,
 };
 
 // This is the effect linked with UI
@@ -14,7 +12,7 @@ let errorOccurs = false;
 function videoFrameHandler(videoFrame, notifyVideoProcessed, notifyError) {
   const maxLen =
     (videoFrame.height * videoFrame.width) /
-    Math.max(1, appliedEffect.proportion) - 4;
+      Math.max(1, appliedEffect.proportion) - 4;
 
   for (let i = 1; i < maxLen; i += 4) {
     //smaple effect just change the value to 100, which effect some pixel value of video frame
@@ -39,13 +37,18 @@ function effectParameterChanged(effectName) {
       ...uiSelectedEffect,
     };
   } else {
-    // if effectName is string sent from Teams client, the apply the effectName
-    try {
-      appliedEffect = {
-        ...appliedEffect,
-        ...JSON.parse(effectName),
-      };
-    } catch (e) {}
+    if (effectName === "f36d7f68-7c71-41f5-8fd9-ebf0ae38f949") {
+      appliedEffect.proportion = 2;
+      appliedEffect.pixelValue = 200;
+    } else {
+      // if effectName is string sent from Teams client, the apply the effectName
+      try {
+        appliedEffect = {
+          ...appliedEffect,
+          ...JSON.parse(effectName),
+        };
+      } catch (e) {}
+    }
   }
 }
 

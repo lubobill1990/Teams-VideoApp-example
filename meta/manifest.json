@@ -1,6 +1,6 @@
 {
-  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
-  "manifestVersion": "1.9",
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.7/MicrosoftTeams.schema.json",
+  "manifestVersion": "devPreview",
   "version": "1.0.0",
   "showLoadingIndicator": true,
   "id": "b15f97b7-1f9b-4bb7-ac9f-efddf27aae7b",
@@ -24,26 +24,33 @@
     "full": "Clone this repo and change the video frame processing function"
   },
   "accentColor": "#FFFFFF",
-  "configurableTabs": [
-    {
-      "configurationUrl": "https://lubobill1990.github.io/Teams-VideoApp-example/app/configure.html",
-      "canUpdateConfiguration": true,
-      "scopes": [
-        "groupchat"
-      ],
-      "context": [
-        "privateChatTab",
-        "meetingSidePanel",
-        "meetingDetailsTab",
-        "meetingChatTab"
+  "devicePermissions": ["media"],
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "CameraStream.Read.User",
+          "type": "Delegated"
+        },
+        {
+          "name": "OutgoingVideoStream.Write.User",
+          "type": "Delegated"
+        }
       ]
     }
-  ],
-  "permissions": [
-    "identity",
-    "messageTeamMembers"
-  ],
-  "validDomains": [
-    "lubobill1990.github.io"
-  ]
+  },
+  "validDomains": ["lubobill1990.github.io"],
+  "localizationInfo": {
+    "defaultLanguageTag": "en-us"
+  },
+  "meetingExtensionDefinition": {
+    "filters": [
+      {
+        "id": "f36d7f68-7c71-41f5-8fd9-ebf0ae38f949",
+        "name": "half",
+        "thumbnail": "half.png"
+      }
+    ],
+    "videoAppContentUrl": "https://lubobill1990.github.io/Teams-VideoApp-example/app/index.html"
+  }
 }

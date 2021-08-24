@@ -489,8 +489,15 @@ var HostClientType;
     HostClientType["web"] = "web";
     HostClientType["android"] = "android";
     HostClientType["ios"] = "ios";
+    /**
+     * @deprecated Use teamsRoomsWindows instead.
+     */
     HostClientType["rigel"] = "rigel";
     HostClientType["surfaceHub"] = "surfaceHub";
+    HostClientType["teamsRoomsWindows"] = "teamsRoomsWindows";
+    HostClientType["teamsRoomsAndroid"] = "teamsRoomsAndroid";
+    HostClientType["teamsPhones"] = "teamsPhones";
+    HostClientType["teamsDisplays"] = "teamsDisplays";
 })(HostClientType = exports.HostClientType || (exports.HostClientType = {}));
 // Ensure these declarations stay in sync with the framework.
 var FrameContexts;
@@ -668,9 +675,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = __webpack_require__(5);
 exports.version = '1.10.0';
 /**
- * This is the SDK version when all SDK APIs started to check platform compatibility for the APIs.
+ * The SDK version when all SDK APIs started to check platform compatibility for the APIs was 1.6.0.
+ * Modified to 2.0.1 which is hightest till now so that if any client doesn't pass version in initialize function, it will be set to highest.
+ * Mobile clients are passing versions, hence will be applicable to web and desktop clients only.
  */
-exports.defaultSDKVersionForCompatCheck = '1.6.0';
+exports.defaultSDKVersionForCompatCheck = '2.0.1';
+/**
+ * This is the SDK version when selectMedia API - VideoAndImage is supported on mobile.
+ */
+exports.videoAndImageMediaAPISupportVersion = '2.0.2';
 /**
  * Minimum required client supported version for {@link getUserJoinedTeams} to be supported on {@link HostClientType.android}
  */
@@ -993,10 +1006,14 @@ var location_1 = __webpack_require__(29);
 exports.location = location_1.location;
 var meeting_1 = __webpack_require__(30);
 exports.meeting = meeting_1.meeting;
-var people_1 = __webpack_require__(31);
+var monetization_1 = __webpack_require__(31);
+exports.monetization = monetization_1.monetization;
+var people_1 = __webpack_require__(32);
 exports.people = people_1.people;
-var video_1 = __webpack_require__(32);
+var video_1 = __webpack_require__(33);
 exports.video = video_1.video;
+var sharing_1 = __webpack_require__(34);
+exports.sharing = sharing_1.sharing;
 
 
 /***/ }),
@@ -1111,7 +1128,11 @@ var authentication;
         if (globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.desktop ||
             globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.android ||
             globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.ios ||
-            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.rigel) {
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.rigel ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsRoomsWindows ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsRoomsAndroid ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsPhones ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsDisplays) {
             // Convert any relative URLs into absolute URLs before sending them over to the parent window.
             var link = document.createElement('a');
             link.href = authenticateParams.url;
@@ -1586,7 +1607,10 @@ exports.initializePrivateApis = initializePrivateApis;
  */
 function getUserJoinedTeams(callback, teamInstanceParameters) {
     internalAPIs_1.ensureInitialized();
-    if (globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.android &&
+    if ((globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.android ||
+        globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsRoomsAndroid ||
+        globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsPhones ||
+        globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsDisplays) &&
         !internalAPIs_1.isAPISupportedByPlatform(constants_2.getUserJoinedTeamsSupportedAndroidClientVersion)) {
         var oldPlatformError = { errorCode: interfaces_1.ErrorCode.OLD_PLATFORM };
         throw new Error(JSON.stringify(oldPlatformError));
@@ -2144,7 +2168,7 @@ var media;
     (function (MediaType) {
         MediaType[MediaType["Image"] = 1] = "Image";
         // Video = 2, // Not implemented yet
-        // ImageOrVideo = 3, // Not implemented yet
+        MediaType[MediaType["VideoAndImage"] = 3] = "VideoAndImage";
         MediaType[MediaType["Audio"] = 4] = "Audio";
     })(MediaType = media.MediaType || (media.MediaType = {}));
     /**
@@ -2169,6 +2193,18 @@ var media;
             var oldPlatformError = { errorCode: interfaces_1.ErrorCode.OLD_PLATFORM };
             callback(oldPlatformError, null);
             return;
+        }
+        if (mediaUtil_1.isMediaCallForVideoAndImageInputs(mediaInputs)) {
+            if (globalVars_1.GlobalVars.hostClientType != constants_1.HostClientType.android && globalVars_1.GlobalVars.hostClientType != constants_1.HostClientType.ios) {
+                var notSupportedError = { errorCode: interfaces_1.ErrorCode.NOT_SUPPORTED_ON_PLATFORM };
+                callback(notSupportedError, null);
+                return;
+            }
+            else if (!internalAPIs_1.isAPISupportedByPlatform(constants_2.videoAndImageMediaAPISupportVersion)) {
+                var oldPlatformError = { errorCode: interfaces_1.ErrorCode.OLD_PLATFORM };
+                callback(oldPlatformError, null);
+                return;
+            }
         }
         if (!mediaUtil_1.validateSelectMediaInputs(mediaInputs)) {
             var invalidInput = { errorCode: interfaces_1.ErrorCode.INVALID_ARGUMENTS };
@@ -2228,7 +2264,11 @@ var media;
         internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.task);
         if (globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.desktop ||
             globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.web ||
-            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.rigel) {
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.rigel ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsRoomsWindows ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsRoomsAndroid ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsPhones ||
+            globalVars_1.GlobalVars.hostClientType === constants_1.HostClientType.teamsDisplays) {
             var notSupportedError = { errorCode: interfaces_1.ErrorCode.NOT_SUPPORTED_ON_PLATFORM };
             callback(notSupportedError, null);
             return;
@@ -2313,6 +2353,18 @@ function validateSelectMediaInputs(mediaInputs) {
     return true;
 }
 exports.validateSelectMediaInputs = validateSelectMediaInputs;
+/**
+ * Returns true if the mediaInput params are called for mediatype VideoAndImage and false otherwise
+ */
+function isMediaCallForVideoAndImageInputs(mediaInputs) {
+    if (mediaInputs) {
+        if (mediaInputs.mediaType == media_1.media.MediaType.VideoAndImage || mediaInputs.videoAndImageProps) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.isMediaCallForVideoAndImageInputs = isMediaCallForVideoAndImageInputs;
 /**
  * Returns true if the get Media params are valid and false otherwise
  */
@@ -2405,7 +2457,7 @@ var menus_1 = __webpack_require__(15);
 exports.menus = menus_1.menus;
 var logs_1 = __webpack_require__(13);
 exports.logs = logs_1.logs;
-var interfaces_1 = __webpack_require__(33);
+var interfaces_1 = __webpack_require__(35);
 exports.NotificationTypes = interfaces_1.NotificationTypes;
 exports.ViewerActionTypes = interfaces_1.ViewerActionTypes;
 exports.UserSettingTypes = interfaces_1.UserSettingTypes;
@@ -2422,16 +2474,18 @@ exports.sendCustomEvent = privateAPIs_1.sendCustomEvent;
 exports.registerCustomHandler = privateAPIs_1.registerCustomHandler;
 exports.uploadCustomApp = privateAPIs_1.uploadCustomApp;
 exports.registerUserSettingsChangeHandler = privateAPIs_1.registerUserSettingsChangeHandler;
-var conversations_1 = __webpack_require__(34);
+var conversations_1 = __webpack_require__(36);
 exports.conversations = conversations_1.conversations;
-var meetingRoom_1 = __webpack_require__(35);
+var meetingRoom_1 = __webpack_require__(37);
 exports.meetingRoom = meetingRoom_1.meetingRoom;
-var remoteCamera_1 = __webpack_require__(36);
+var remoteCamera_1 = __webpack_require__(38);
 exports.remoteCamera = remoteCamera_1.remoteCamera;
-var files_1 = __webpack_require__(37);
+var files_1 = __webpack_require__(39);
 exports.files = files_1.files;
-var appEntity_1 = __webpack_require__(38);
+var appEntity_1 = __webpack_require__(40);
 exports.appEntity = appEntity_1.appEntity;
+var teams_1 = __webpack_require__(41);
+exports.teams = teams_1.teams;
 
 
 /***/ }),
@@ -3274,7 +3328,7 @@ var meeting;
         if (!callback) {
             throw new Error('[get incoming client audio state] Callback cannot be null');
         }
-        internalAPIs_1.ensureInitialized();
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage);
         communication_1.sendMessageToParent('getIncomingClientAudioState', callback);
     }
     meeting.getIncomingClientAudioState = getIncomingClientAudioState;
@@ -3289,7 +3343,7 @@ var meeting;
         if (!callback) {
             throw new Error('[toggle incoming client audio] Callback cannot be null');
         }
-        internalAPIs_1.ensureInitialized();
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage);
         communication_1.sendMessageToParent('toggleIncomingClientAudio', callback);
     }
     meeting.toggleIncomingClientAudio = toggleIncomingClientAudio;
@@ -3305,7 +3359,7 @@ var meeting;
         if (!callback) {
             throw new Error('[get meeting details] Callback cannot be null');
         }
-        internalAPIs_1.ensureInitialized();
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage, constants_1.FrameContexts.settings, constants_1.FrameContexts.content);
         communication_1.sendMessageToParent('meeting.getMeetingDetails', callback);
     }
     meeting.getMeetingDetails = getMeetingDetails;
@@ -3320,7 +3374,7 @@ var meeting;
         if (!callback) {
             throw new Error('[get Authentication Token For AnonymousUser] Callback cannot be null');
         }
-        internalAPIs_1.ensureInitialized();
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.meetingStage);
         communication_1.sendMessageToParent('meeting.getAuthenticationTokenForAnonymousUser', callback);
     }
     meeting.getAuthenticationTokenForAnonymousUser = getAuthenticationTokenForAnonymousUser;
@@ -3379,11 +3433,57 @@ var meeting;
         handlers_1.registerHandler('meeting.liveStreamChanged', handler);
     }
     meeting.registerLiveStreamChangedHandler = registerLiveStreamChangedHandler;
+    /**
+     * Allows an app to share contents in the meeting
+     * @param callback Callback contains 2 parameters, error and result.
+     * error can either contain an error of type SdkError, incase of an error, or null when share is successful
+     * result can either contain a true value, incase of a successful share or null when the share fails
+     * @param appContentUrl is the input URL which needs to be shared on to the stage
+     */
+    function shareAppContentToStage(callback, appContentUrl) {
+        if (!callback) {
+            throw new Error('[share app content to stage] Callback cannot be null');
+        }
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.sidePanel);
+        communication_1.sendMessageToParent('meeting.shareAppContentToStage', [appContentUrl], callback);
+    }
+    meeting.shareAppContentToStage = shareAppContentToStage;
 })(meeting = exports.meeting || (exports.meeting = {}));
 
 
 /***/ }),
 /* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var communication_1 = __webpack_require__(0);
+var internalAPIs_1 = __webpack_require__(1);
+var constants_1 = __webpack_require__(2);
+var monetization;
+(function (monetization) {
+    /**
+     * @private
+     * Hide from docs
+     * Open dialog to start user's purchase experience
+     * @param callback Callback contains 1 parameters, error.
+     * @param planInfo optional parameter. It contains info of the subscription plan pushed to users.
+     * error can either contain an error of type SdkError, incase of an error, or null when get is successful
+     */
+    function openPurchaseExperience(callback, planInfo) {
+        if (!callback) {
+            throw new Error('[open purchase experience] Callback cannot be null');
+        }
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content);
+        communication_1.sendMessageToParent('monetization.openPurchaseExperience', [planInfo], callback);
+    }
+    monetization.openPurchaseExperience = openPurchaseExperience;
+})(monetization = exports.monetization || (exports.monetization = {}));
+
+
+/***/ }),
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3425,7 +3525,7 @@ var people;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3512,7 +3612,105 @@ var video;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var internalAPIs_1 = __webpack_require__(1);
+var communication_1 = __webpack_require__(0);
+var interfaces_1 = __webpack_require__(7);
+var constants_1 = __webpack_require__(2);
+var sharing;
+(function (sharing) {
+    sharing.SharingAPIMessages = {
+        shareWebContent: 'sharing.shareWebContent',
+    };
+    /**
+     * @private
+     * Feature is under development
+     *
+     * Opens a share dialog for web content
+     * @param shareWebContentRequest web content info
+     * @param callback optional callback
+     */
+    function shareWebContent(shareWebContentRequest, callback) {
+        if (!validateNonEmptyContent(shareWebContentRequest, callback)) {
+            return;
+        }
+        if (!validateTypeConsistency(shareWebContentRequest, callback)) {
+            return;
+        }
+        if (!validateContentForSupportedTypes(shareWebContentRequest, callback)) {
+            return;
+        }
+        internalAPIs_1.ensureInitialized(constants_1.FrameContexts.content, constants_1.FrameContexts.sidePanel, constants_1.FrameContexts.task, constants_1.FrameContexts.stage, constants_1.FrameContexts.meetingStage);
+        communication_1.sendMessageToParent(sharing.SharingAPIMessages.shareWebContent, [shareWebContentRequest], callback);
+    }
+    sharing.shareWebContent = shareWebContent;
+    // Error checks
+    function validateNonEmptyContent(shareRequest, callback) {
+        if (!(shareRequest && shareRequest.content && shareRequest.content.length)) {
+            if (callback) {
+                callback({
+                    errorCode: interfaces_1.ErrorCode.INVALID_ARGUMENTS,
+                    message: 'Shared content is missing',
+                });
+            }
+            return false;
+        }
+        return true;
+    }
+    function validateTypeConsistency(shareRequest, callback) {
+        if (shareRequest.content.some(function (item) { return !item.type; })) {
+            if (callback) {
+                callback({
+                    errorCode: interfaces_1.ErrorCode.INVALID_ARGUMENTS,
+                    message: 'Shared content type cannot be undefined',
+                });
+            }
+            return false;
+        }
+        if (shareRequest.content.some(function (item) { return item.type !== shareRequest.content[0].type; })) {
+            if (callback) {
+                callback({
+                    errorCode: interfaces_1.ErrorCode.INVALID_ARGUMENTS,
+                    message: 'Shared content must be of the same type',
+                });
+            }
+            return false;
+        }
+        return true;
+    }
+    function validateContentForSupportedTypes(shareRequest, callback) {
+        if (shareRequest.content[0].type === 'URL') {
+            if (shareRequest.content.some(function (item) { return !item.url; })) {
+                if (callback) {
+                    callback({
+                        errorCode: interfaces_1.ErrorCode.INVALID_ARGUMENTS,
+                        message: 'URLs are required for URL content types',
+                    });
+                }
+                return false;
+            }
+        }
+        else {
+            if (callback) {
+                callback({
+                    errorCode: interfaces_1.ErrorCode.INVALID_ARGUMENTS,
+                    message: 'Content type is unsupported',
+                });
+            }
+            return false;
+        }
+        return true;
+    }
+})(sharing = exports.sharing || (exports.sharing = {}));
+
+
+/***/ }),
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3554,7 +3752,7 @@ var UserSettingTypes;
 
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3629,7 +3827,7 @@ var conversations;
 
 
 /***/ }),
-/* 35 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3763,7 +3961,7 @@ var meetingRoom;
 
 
 /***/ }),
-/* 36 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3958,7 +4156,7 @@ var remoteCamera;
 
 
 /***/ }),
-/* 37 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4109,7 +4307,7 @@ var files;
 
 
 /***/ }),
-/* 38 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4149,6 +4347,66 @@ var appEntity;
     }
     appEntity_1.selectAppEntity = selectAppEntity;
 })(appEntity = exports.appEntity || (exports.appEntity = {}));
+
+
+/***/ }),
+/* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var communication_1 = __webpack_require__(0);
+var internalAPIs_1 = __webpack_require__(1);
+var public_1 = __webpack_require__(8);
+/**
+ * Namespace to interact with the `teams` specific part of the SDK.
+ *
+ * @private
+ * Hide from docs
+ */
+var teams;
+(function (teams) {
+    var ChannelType;
+    (function (ChannelType) {
+        ChannelType[ChannelType["Regular"] = 0] = "Regular";
+        ChannelType[ChannelType["Private"] = 1] = "Private";
+        ChannelType[ChannelType["Shared"] = 2] = "Shared";
+    })(ChannelType = teams.ChannelType || (teams.ChannelType = {}));
+    /**
+     * @private
+     * Hide from docs
+     *
+     * Get a list of channels belong to a Team
+     * @param groupId a team's objectId
+     */
+    function getTeamChannels(groupId, callback) {
+        internalAPIs_1.ensureInitialized(public_1.FrameContexts.content);
+        if (!groupId) {
+            throw new Error('[teams.getTeamChannels] groupId cannot be null or empty');
+        }
+        if (!callback) {
+            throw new Error('[teams.getTeamChannels] Callback cannot be null');
+        }
+        communication_1.sendMessageToParent('teams.getTeamChannels', [groupId], callback);
+    }
+    teams.getTeamChannels = getTeamChannels;
+    /**
+     * @private
+     * Allow 1st party apps to call this function when they receive migrated errors to inform Teams refresh siteurl
+     * when site admin renames siteurl.
+     * @param threadId ID of the thread where the app entity will be created; if threadId is not
+     * provided, the threadId from route params will be used.
+     */
+    function refreshSiteUrl(callback, threadId) {
+        internalAPIs_1.ensureInitialized();
+        if (!callback) {
+            throw new Error('[teams.refreshSiteUrl] Callback cannot be null');
+        }
+        communication_1.sendMessageToParent(threadId);
+    }
+    teams.refreshSiteUrl = refreshSiteUrl;
+})(teams = exports.teams || (exports.teams = {}));
 
 
 /***/ })
