@@ -56,6 +56,7 @@ function effectParameterChanged(effectName) {
   }
 }
 
+microsoftTeams.appInitialization.notifySuccess();
 microsoftTeams.video.registerForVideoEffect(effectParameterChanged);
 microsoftTeams.video.registerForVideoFrame(videoFrameHandler, {
   format: "NV12",
@@ -77,4 +78,3 @@ document.getElementById("pixel_value").addEventListener("change", function () {
   uiSelectedEffect.pixelValue = this.value;
   microsoftTeams.video.notifySelectedVideoEffectChanged("EffectChanged");
 });
-microsoftTeams.appInitialization.notifySuccess();
