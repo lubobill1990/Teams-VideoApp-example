@@ -6,10 +6,10 @@
   "id": "b15f97b7-1f9b-4bb7-ac9f-efddf27aae6e",
   "packageName": "com.microsoft.teams.videopp",
   "developer": {
-    "name": "Felicity",
-    "websiteUrl": "https://github.com/felicityrooting/Teams-VideoApp-example/",
-    "privacyUrl": "https://github.com/felicityrooting/Teams-VideoApp-example/",
-    "termsOfUseUrl": "https://github.com/felicityrooting/Teams-VideoApp-example/"
+    "name": "Fang Liu",
+    "websiteUrl": "https://github.com/lubobill1990/Teams-VideoApp-example",
+    "privacyUrl": "https://github.com/lubobill1990/Teams-VideoApp-example",
+    "termsOfUseUrl": "https://github.com/lubobill1990/Teams-VideoApp-example"
   },
   "icons": {
     "color": "icon-color.png",
@@ -20,7 +20,7 @@
     "full": "Teams VideoApp example"
   },
   "description": {
-    "short": "Felicity's test Teams video app.",
+    "short": "This repo demonstrate a minimal Teams video app.",
     "full": "Clone this repo and change the video frame processing function"
   },
   "accentColor": "#FFFFFF",
@@ -51,6 +51,6 @@
         "thumbnail": "half.png"
       }
     ],
-    "videoAppContentUrl": "https://felicityrooting.github.io/Teams-VideoApp-example/app/index.html"
+    "videoAppContentUrl": "https://FelicityRooting.github.io/Teams-VideoApp-example/app/index.html"
   }
 }
