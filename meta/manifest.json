@@ -7,9 +7,9 @@
   "packageName": "com.microsoft.teams.videopp",
   "developer": {
     "name": "Fang Liu",
-    "websiteUrl": "https://github.com/lubobill1990/Teams-VideoApp-example",
-    "privacyUrl": "https://github.com/lubobill1990/Teams-VideoApp-example",
-    "termsOfUseUrl": "https://github.com/lubobill1990/Teams-VideoApp-example"
+    "websiteUrl": "https://github.com/lfelicityrooting/Teams-VideoApp-example",
+    "privacyUrl": "https://github.com/lfelicityrooting/Teams-VideoApp-example",
+    "termsOfUseUrl": "https://github.com/lfelicityrooting/Teams-VideoApp-example"
   },
   "icons": {
     "color": "icon-color.png",
@@ -39,7 +39,7 @@
       ]
     }
   },
-  "validDomains": ["lubobill1990.github.io"],
+  "validDomains": ["felicityrooting.github.io"],
   "localizationInfo": {
     "defaultLanguageTag": "en-us"
   },
@@ -51,6 +51,6 @@
         "thumbnail": "half.png"
       }
     ],
-    "videoAppContentUrl": "https://FelicityRooting.github.io/Teams-VideoApp-example/app/index.html"
+    "videoAppContentUrl": "https://felicityrooting.github.io/Teams-VideoApp-example/app/index.html"
   }
 }

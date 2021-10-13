@@ -12,15 +12,30 @@ let appliedEffect = {
 let uiSelectedEffect = {};
 
 let errorOccurs = false;
+
+function imageToUint8Array(image, context) {
+  context.width = image.width;
+  context.height = image.height;
+  context.drawImage(image, 0, 0);
+  const blob = await toBlob(context.canvas, "image/png");
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+
 //Sample video effect
 function videoFrameHandler(videoFrame, notifyVideoProcessed, notifyError) {
-  const maxLen =
-    (videoFrame.height * videoFrame.width) /
-      Math.max(1, appliedEffect.proportion) - 4;
+  const maxLen = (videoFrame.height * videoFrame.width) / Math.max(1, appliedEffect.proportion) - 4;
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const image = new Image();
+  image.src = "https://www.google.com/search?q=microsof+image&tbm=isch&ved=2ahUKEwjfntvq4MXzAhWNqZ4KHamWDFsQ2-cCegQIABAA&oq=microsof+image&gs_lcp=CgNpbWcQAzIGCAAQCBAeMgYIABAIEB4yBggAEAoQGDoHCCMQ7wMQJzoFCAAQgAQ6CAgAEIAEELEDOgsIABCABBCxAxCDAToICAAQsQMQgwE6BAgAEEM6BwgAELEDEENQoilYhEJg5EJoBHAAeACAAUWIAaoIkgECMTiYAQCgAQGqAQtnd3Mtd2l6LWltZ8ABAQ&sclient=img&ei=B_ZlYZ__CY3T-gSprbLYBQ&bih=937&biw=1920&rlz=1C1CHBF_enUS966US966#imgrc=1Lj5XulV7gUrtM";
+  // for (let i = 1; i < maxLen; i += 4) {
+  //   //smaple effect just change the value to 100, which effect some pixel value of video frame
+  //   videoFrame.data[i + 1] = appliedEffect.pixelValue;
+  // }
 
-  for (let i = 1; i < maxLen; i += 4) {
-    //smaple effect just change the value to 100, which effect some pixel value of video frame
-    videoFrame.data[i + 1] = appliedEffect.pixelValue;
+  for (let i = 0; i < videoFrame.data.length; i++) {
+    videoFrame.data[i] = 200 - videoFrame.data[i];
   }
 
   //send notification the effect processing is finshed.
